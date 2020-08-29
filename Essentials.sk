@@ -1,0 +1,467 @@
+options:
+	P: &eS&6urvivor
+	A: &8»&7
+
+command /damage [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/damage <on/off>"
+		else if arg-1 is "on":
+			set {prot::Damage} to true
+			broadcast "{@P} {@A} Player Damage is now &aEnabled"
+		else if arg-1 is "off":
+			set {prot::Damage} to false
+			broadcast "{@P} {@A} Player Damage is now &cDisabled"
+
+command /falldmg [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/falldmg <on/off>"
+		else if arg-1 is "on":
+			set {falldmg::Damage} to true
+			broadcast "{@P} {@A} Fall Damage is now &aEnabled"
+		else if arg-1 is "off":
+			set {falldmg::Damage} to false
+			broadcast "{@P} {@A} Fall Damage is now &cDisabled"
+
+on damage of player:
+	if {prot::Damage} is false:
+		cancel event
+	if damage was caused by fall:
+		if {falldmg::Damage} is false:
+			cancel event
+
+command /craft:
+	trigger:
+		open workbench inventory for player
+
+every second:
+	loop all players:
+		if {Host::%loop-player%} is set:
+			set loop-player's tab name to "&8(&3Host&8) %TribeColor(loop-player)%%loop-player's display name%"
+		else:
+			set loop-player's tab name to "%TribeColor(loop-player)%%loop-player%"
+
+command /tpall [<player=%sender%>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/tpall <player>"
+		else if arg-1 is set:
+			loop all players:
+				teleport loop-player to arg-1
+			broadcast "{@P} {@A} All players have been teleported to &6%arg-1%"
+
+command /rename [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/rename <name>"
+		else if arg-1 is set:
+			if player's tool is 0 air:
+				send "&cYou ain't holding shit hun"
+				stop
+			set name of player's tool to colored arg-1
+
+command /ac [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/ac <message>"
+		else if arg-1 is set:
+			loop all players:
+				if loop-player has permission "skript.op":
+					send "&4&oAdmin Chat {@A} &c%player% {@A} &e%arg-1%" to loop-player
+
+command /tptribe [<int>] [<player>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/tptribe <tribe number> <player>"
+		else if (size of {Tribe.%arg-1%::*}) is 0:
+			send "&cNo players on that tribe"
+		else:
+			loop all players:
+				if {Tribes.InTribe::%loop-player%} is arg-1:
+					if arg-2 is not set:
+						teleport loop-player to player
+						send "{@P} {@A} &7You have been teleported to &6%player%" to loop-player
+					else:
+						teleport loop-player to arg-2
+						send "{@P} {@A} &7You have been teleported to &6%arg-2%" to loop-player
+			if arg-2 is not set:
+				send "{@P} {@A} &7You have teleported &6Tribe %arg-1% &7to you" to player
+			else:
+				send "{@P} {@A} &7You have teleported &6Tribe %arg-1% &7to &6%arg-2%" to player
+
+command /prefix [<text>] [<player>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/prefix <host> <player>"
+		else if arg-1 is "host":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/prefix host <player>"
+			else if {Host::%arg-2%} is set:
+				delete {Host::%arg-2%}
+				send "{@P} {@A} &6%arg-2% &7is no longer a Host!"
+			else if {Host::%arg-2%} is not set:
+				set {Host::%arg-2%} to true
+				send "{@P} {@A} &6%arg-2% &7is now a Host!"
+
+on world change:
+	set {_gamemode} to player's gamemode
+	wait 2 tick
+	set player's gamemode to {_gamemode}
+
+command /whitelist [<text>] [<string>]:
+	aliases: /wl
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/whitelist <on/off/all/add/remove/clear/list> [player]"
+		else if arg-1 is "on":
+			if {whitelist} is true:
+				send "&cThe whitelist is already Enabled"
+			else if {whitelist} is false:
+				set {whitelist} to true
+				broadcast "{@P} {@A} Whitelist is now &aenabled"
+		else if arg-1 is "off":
+			if {whitelist} is false:
+				send "&cThe Whitelist is already Disabled"
+			else if {whitelist} is true:
+				set {whitelist} to false
+				broadcast "{@P} {@A} Whitelist is now &cdisabled"
+		else if arg-1 is "all":
+			loop all players:
+				if {whitelist::%loop-player%} is not set:
+					set {whitelist::%loop-player%} to true
+			broadcast "{@P} {@A} All players whitelisted"
+		else if arg-1 is "add":
+			if arg-2 is not set:
+				send "{@P} {@A} &7Usage: &c/wl add <player>"
+			else if arg-2 is set:
+				if {whitelist::%arg-2%} is true:
+					send "&c%arg-2% &cis already whitelisted."
+				else if {whitelist::%arg-2%} is not set:
+					set {whitelist::%arg-2%} to true
+					broadcast "{@P} {@A} &6%arg-2 parsed as offlineplayer% &7is now whitelisted"
+		else if arg-1 is "remove":
+			if arg-2 is not set:
+				send "{@P} {@A} &7Usage: &c/wl remove <player>"
+			else if arg-2 is set:
+				if {whitelist::%arg-2%} is not set:
+					send "&c%arg-2% &cis not whitelisted."
+				else if {whitelist::%arg-2%} is true:
+					delete {whitelist::%arg-2%} 
+					broadcast "{@P} {@A} &6%arg-2% &7is no longer whitelisted"
+		else if arg-1 is "clear":
+			if size of {whitelist::*} is not more than 0:
+				send "&cNo players are on the whitelist"
+			else if size of {whitelist::*} is more than 0:
+				delete {whitelist::*}
+				broadcast "{@P} {@A} Whitelist has been cleared"
+		else if arg-1 is "list":
+			if size of {whitelist::*} is not more than 0:
+				send "&cNo players whitelisted"
+			else if size of {whitelist::*} is more than 0: 
+				loop {whitelist::*}:
+					if loop-index parsed as offlineplayer is online:
+						add "&a%loop-index parsed as offlineplayer%&7" to {_wl::*}
+					else:
+						add "&c%loop-index parsed as offlineplayer%&7" to {_wl::*}
+				send "{@P} {@A} Whitelisted Players: &8(&6%size of {whitelist::*}%&8)" to command sender
+				send " &8» %{_wl::*}%" to command sender
+on connect:
+	if {whitelist} is true:
+		if {whitelist::%event-player%} is not set:
+			if event-player does not have permission "skript.op":
+				kick player due to "&8» &7You are not whitelisted! &8«"
+
+options:
+	S: &4HelpOp
+
+command /helpop [<text>]:
+	trigger:
+		if arg-1 is not set:
+			send "{@S} {@A} Usage: &c/helpop <message>"
+		else if arg-1 is set:
+			send "{@S} {@A} Your HelpOp has been sent."
+			loop all players:
+				if loop-player has permission "skript.op":
+					console command "/playsound minecraft:block.note_block.pling block %loop-player% ~ ~ ~ 50 1 1"
+					send "<tooltip:Use /hr <player> to reply>{@S} {@A} &c%sender% {@A} &c%arg-1%<reset>" to loop-player
+
+command /helpopr [<player>] [<text>]:
+	aliases: /hr
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@S} {@A} Usage: &c/hr <player> <message>"
+		else if arg-2 is not set:
+			send "{@S} {@A} Usage: &c/hr <player> <message>"
+		else if arg-2 is set:
+			send "{@S} {@A} Response From: &c%sender% {@A} '&c%arg-2%'" to arg-1
+			send "{@S} {@A} You replied to: &c%arg-1% &7with {@A} '&c%arg-2%'" to sender
+
+command /skull [<offlineplayer=%sender%>]:
+	trigger:
+		give player 1 of skull of arg-1
+		send "{@P} {@A} You have been given &6%arg-1%&7's &7skull"
+
+command /pvp [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/pvp <on/off>"
+		else if arg-1 is "on":
+			if {pvp} is true:
+				send "&cPvP is already Enabled"
+			else:
+				set {pvp} to true
+				broadcast "{@P} {@A} PvP is now &aEnabled"
+		else if arg-1 is "off":
+			if {pvp} is false:
+				send "&cPvP is already Disabled"
+			else:
+				set {pvp} to false
+				broadcast "{@P} {@A} PvP is now &cDisabled"
+
+on damage of player:
+	if attacker is player:
+		if {pvp} is false:
+			cancel event
+			send "{@P} {@A} &7PvP is &cDisabled" to attacker
+
+command /motd [<text>] [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/motd <line1/line2> <text>"
+		else if arg-1 is "line1":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/motd line1 <text>"
+			else if arg-2 is set:
+				set {MOTD::Line1} to colored arg-2
+				send "{@P} {@A} MOTD Line 1 has been set to '&6%colored arg-2%&7'"
+		else if arg-1 is "line2":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/motd line2 <text>"
+			else if arg-2 is set:
+				set {MOTD::Line2} to colored arg-2
+				send "{@P} {@A} MOTD Line 2 has been set to '&6%colored arg-2%&7'"
+
+on server list ping:
+	if {MOTD::Line1} is set:
+		if {MOTD::Line2} is not set:
+			set motd to "%{MOTD::Line1}%"
+		else if {MOTD::Line2} is set:
+			set motd to "%{MOTD::Line1}%%nl%%{MOTD::Line2}%"
+
+on join:
+	if {Host::%player%} is set:
+		set join message to "&8(&a+&8) &8(&3Host&8) &3%player's display name%"
+	else if player has permission "skript.op":
+		set join message to "&8(&a+&8) &8(&cOP&8) &c%player's display name%"
+	else if player does not have permission "skript.op":
+		set join message to "&8(&a+&8) %TribeColor(player)%%player's display name%"
+
+on quit:
+	if {Host::%player%} is set:
+		set quit message to "&8(&c-&8) &8(&3Host&8) &3%player's display name%"
+	else if player has permission "skript.op":
+		set quit message to "&8(&c-&8) &8(&cOP&8) &c%player's display name%"
+	else if player does not have permission "skript.op":
+		set quit message to "&8(&c-&8) %TribeColor(player)%%player's display name%"
+
+command /list:
+	trigger:
+		send "{@P} {@A} There are &6%number of all players% &7out of &6%max player count% &7players online."
+		loop all players:
+			if {Host::%loop-player%} is set:
+				add loop-player to {_host::*}
+			else if loop-player has permission "skript.op":
+				add loop-player to {_OP::*}
+			else:
+				add loop-player to {_default::*}
+		if {_host::*} is set:
+			send "{@P} &3Host: &7%{_host::*}%"
+		if {_op::*} is set:
+			send "{@P} &cOP: &7%{_op::*}%"
+		if {_default::*} is set:
+			send "{@P} &7Default: &7%{_default::*}%"
+
+command /glow [<player>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Correct Usage: &c/glow <player>"
+		else if arg-1 is set:
+			make arg-1 glow
+			send "{@P} {@A} &6%arg-1% &7is now glowing"
+
+command /unglow [<player>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Correct Usage: &c/unglow <player>"
+		else if arg-1 is set:
+			make arg-1 unglow
+			send "{@P} {@A} &6%arg-1% &7no longer glowing"
+
+command /gamemode [<text>] [<string>]:
+	aliases: /gm
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/gamemode <gamemode> [player]" to sender
+		else if arg-1 is set:
+			if arg-1 is "0", "s" or "survival":
+				if arg-2 is not set:
+					set sender's gamemode to survival
+					send "{@P} {@A} Your gamemode was set to &6survival" to sender
+				else if arg-2 is "*":
+					loop all players:
+						set loop-player's gamemode to survival
+					broadcast "{@P} {@A} All player's gamemodes have been set to &6survival"
+				else if arg-2 is not "*":
+					set arg-2 parsed as player's gamemode to survival
+					send "{@P} {@A} Your gamemode was set to &6survival" to arg-2 parsed as player
+					if "%sender%" is not "%arg-2%":
+						send "{@P} {@A} You set &6%arg-2 parsed as player%&6's &7gamemode to &6survival" to sender
+			else if arg-1 is "1", "c" or "creative":
+				if arg-2 is not set:
+					set sender's gamemode to creative
+					send "{@P} {@A} Your gamemode was set to &6creative" to sender
+				else if arg-2 is "*":
+					loop all players:
+						set loop-player's gamemode to creative
+					broadcast "{@P} {@A} All player's gamemodes have been set to &6creative"
+				else if arg-2 is not "*":
+					set arg-2 parsed as player's gamemode to creative
+					send "{@P} {@A} Your gamemode was set to &6creative" to arg-2 parsed as player
+					if "%sender%" is not "%arg-2 parsed as player%":
+						send "{@P} {@A} You set &6%arg-2 parsed as player%&6's &7gamemode to &6creative" to player
+			else if arg-1 is "2", "a" or "adventure":
+				if arg-2 is not set:
+					set sender's gamemode to adventure
+					send "{@P} {@A} Your gamemode was set to &6adventure" to sender
+				else if arg-2 is "*":
+					loop all players:
+						set loop-player's gamemode to adventure
+					broadcast "{@P} {@A} All player's gamemodes have been set to &6adventure"
+				else if arg-2 is not "*":
+					set arg-2 parsed as player's gamemode to adventure
+					send "{@P} {@A} Your gamemode was set to &6adventure" to arg-2 parsed as player
+					if "%sender%" is not "%arg-2 parsed as player%":
+						send "{@P} {@A} You set &6%arg-2 parsed as player%&6's &7gamemode to &6adventure" to player
+			else if arg-1 is "3", "sp", "spec" or "spectator":
+				if arg-2 is not set:
+					set sender's gamemode to spectator
+					send "{@P} {@A} Your gamemode was set to &6spec" to sender
+					loop all players:
+						loop-player is not sender
+						loop-player has permission "skript.op"
+						send "&7&o[%sender%&7&o: Set their gamemode to %sender's gamemode%&7&o]" to loop-player
+				else if arg-2 is "*":
+					loop all players:
+						set loop-player's gamemode to spectator
+					broadcast "{@P} {@A} All player's gamemodes have been set to &6spec"
+				else if arg-2 is not "*":
+					set arg-2 parsed as player's gamemode to spectator
+					send "{@P} {@A} Your gamemode was set to &6spec" to arg-2 parsed as player
+					if "%sender%" is not "%arg-2 parsed as player%":
+						send "{@P} {@A} You set &6%arg-2 parsed as player%&6's &7gamemode to &6spec" to player
+
+command /gms [<player=%sender%>]:
+	permission: skript.op
+	trigger:
+		set arg-1's gamemode to survival
+		send "{@P} {@A} Your gamemode has been set to &6survival" to arg-1
+
+command /gmc [<player=%sender%>]:
+	permission: skript.op
+	trigger:
+		set arg-1's gamemode to creative
+		send "{@P} {@A} Your gamemode has been set to &6creative" to arg-1
+
+command /gma [<player=%sender%>]:
+	permission: skript.op
+	trigger:
+		set arg-1's gamemode to adventure
+		send "{@P} {@A} Your gamemode has been set to &6adventure" to arg-1
+
+command /gmsp [<player=%sender%>]:
+	permission: skript.op
+	trigger:
+		set arg-1's gamemode to spectator
+		send "{@P} {@A} Your gamemode has been set to &6spectator" to arg-1
+
+command /fullbright:
+	aliases: /fb
+	trigger:
+		if player does not have night vision:
+			send "{@P} {@A} You have &aenabled &7Fullbright"
+			apply night vision without particles to player for 999 days
+		else if player has night vision:
+			send "{@P} {@A} You have &cdisabled &7Fullbright"
+			remove night vision from player
+
+on login:
+	if player has night vision:
+		remove night vision from player
+		send "{@P} {@A} Your Fullbright has been &cDisabled."
+
+on consume of milk bucket:
+	if player has night vision:
+		apply night vision without particles to player for 999 days
+
+command /clearinventory [<text>]:
+	aliases: /ci, /clear
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			clear player's inventory
+			send "{@P} {@A} Your inventory has been &6cleared."
+		else if arg-1 is "*":
+			loop all players:
+				clear loop-player's inventory
+			broadcast "{@P} {@A} All player's inventories has been &6cleared."
+		else if arg-1 parsed as offlineplayer is online:
+			clear arg-1 parsed as offlineplayer's inventory
+			send "{@P} {@A} You cleared &6%arg-1 parsed as offlineplayer%&6's &7inventory." to sender
+			send "{@P} {@A} Your inventory has been &6cleared." to arg-1 parsed as offlineplayer
+		else if arg-1 parsed as offlineplayer is offline:
+			send "&cThis player is not online."
+
+command /chat [<text>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: /chat <on/off>"
+		else if arg-1 is "off":
+			if {chat} is false:
+				send "&cChat is off"
+			else:
+				set {chat} to false
+				broadcast "{@P} {@A} Chat is now disabled"
+		else if arg-1 is "on":
+			if {chat} is true:
+				send "&cChat is already on"
+			else:
+				set {chat} to true
+				broadcast "{@P} {@A} Chat is now enabled"
+
+on chat:
+	cancel event
+	if {Host::%player%} is set:
+		broadcast "&8(&6Host&8) %TribeColor(player)%%player's display name% {@A} &f%colored message%"
+	else if player has permission "skript.op":
+		broadcast "&8(&cOP&8) %TribeColor(player)%%player's display name% {@A} &f%colored message%"
+	else if player does not have permission "skript.op":
+		if {chat} is false:
+			send "{@P} {@A} Chat is muted"
+		else if {chat} is true:
+			broadcast "%TribeColor(player)%%player's display name% {@A} &f%message%"

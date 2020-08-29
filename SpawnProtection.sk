@@ -1,0 +1,24 @@
+options:
+	World: spawn
+
+on break:
+	if "%world of player%" is "{@World}":
+		if player's gamemode is survival:
+			cancel event
+		else:
+			if player does not have permission "skript.op":
+				cancel event	
+
+on place:
+	if "%world of player%" is "{@World}":
+		if player's gamemode is survival:
+			cancel event
+		else:
+			if player does not have permission "skript.op":
+				cancel event
+
+on damage of player:
+	if world of victim is "{@World}":
+		cancel event
+		if victim is on fire:
+			extinguish victim

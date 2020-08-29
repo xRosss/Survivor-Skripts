@@ -1,0 +1,52 @@
+options:
+	P: &eS&6urvivor
+	A: &8»&7
+
+command /warp [<text>] [<string>] [<int>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} &7Usage: &c/warp <warp/set/delete> [player/*/tribe/warp] [tribe number]"
+		else if arg-1 is "set":
+			if arg-2 is not set:
+				send "{@P} {@A} &7Usage: &c/warp set <warp name>"
+			else if arg-2 is set:
+				set {warp::%arg-2%} to location of player
+				set {_x} to floor(x-coordinate of player)
+				set {_y} to floor(y-coordinate of player)
+				set {_z} to floor(z-coordinate of player)
+				send "{@P} {@A} &7Set warp '&6%arg-2%&7' at &7X: &6%{_x}%&7, Y: &6%{_y}%&7, Z: &6%{_z}%"
+		else if arg-1 is "delete":
+			if arg-2 is not set:
+				send "{@P} {@A} &7Usage: &c/warp delete <warp name>"
+			else if arg-2 is set:
+				if {warp::%arg-2%} is not set:
+					send "&cthat is not a warp"
+				else:
+					delete {warp::%arg-2%}
+					send "{@P} {@A} &7You have deleted warp &6%arg-2%"
+		else if {warp::%arg-1%} is not set:
+			send "&cThat warp does not exist"
+		else if {warp::%arg-1%} is set:
+			if arg-2 is not set:
+				teleport player to {warp::%arg-1%}
+				send "{@P} {@A} &7You've warped to &6%arg-1%"
+			else if arg-2 is "tribe":
+				if arg-3 is not set:
+					send "{@P} {@A} Usage: &c/warp %arg-1% tribe [tribe number]"
+				else if arg-3 is set:
+					loop all players:
+						if {Tribes.InTribe::%loop-player%} is arg-3:
+							teleport loop-player to {warp::%arg-1%}
+					send "{@P} {@A} &7You have warped &6Tribe %arg-3% &7to '&6%arg-1%&7'"
+			else if arg-2 is "*":
+				loop all players:
+					{Jury::%loop-player%} is not set
+					teleport loop-player to {warp::%arg-1%}
+				send "{@P} {@A} &7You have warped all players to '&6%arg-1%&7'"
+			else if arg-2 is not "tribe" or "*":
+				if arg-2 parsed as offlineplayer is online:
+					teleport arg-2 parsed as offlineplayer to {warp::%arg-1%}
+					send "{@P} {@A} &7You have warped &6%arg-2% &7to '&6%arg-1%&7'"
+				else:
+					send "&cThat player is not online"

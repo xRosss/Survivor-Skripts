@@ -1,0 +1,22 @@
+options:
+	P: &eS&6urvivor
+	A: &8»&7
+
+on command "/msg":
+	if player does not have permission "skript.op":
+		cancel event
+		send "{@P} {@A} You can't message people in survivor."
+
+on command "/tell":
+	if player does not have permission "skript.op":
+		cancel event
+		send "{@P} {@A} You can't message people in survivor."
+
+on command "/w":
+	if player does not have permission "skript.op":
+		cancel event
+		send "{@P} {@A} You can't message people in survivor."
+
+on command "/teammsg":
+	cancel event
+	send "{@P} {@A} You can't message people in survivor"

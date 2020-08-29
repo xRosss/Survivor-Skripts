@@ -1,0 +1,65 @@
+options:
+	P: &eS&6urvivor
+	A: &8»&7
+
+command /sc [<text>]:
+	trigger:
+		if player's gamemode is not spectator:
+			send "&cYou can't use this command in this gamemode"
+		else if player's gamemode is spectator:
+			if arg-1 is not set:
+				send "{@P} {@A} Usage: &c/sc <message>"
+			else if arg-1 is set:
+				loop all players:
+					if loop-player's gamemode is spectator:
+						send "&6&oSpec Chat {@A} &6%player% {@A} &e%arg-1%" to loop-player
+
+command /invsee [<player>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@P} {@A} Usage: &c/invsee <player>"
+		else if arg-1 is set:
+			open the inventory of arg-1 to player
+			send "{@P} {@A} &7You have opened &6%arg-1%&6's &7inventory"
+
+import:
+	org.bukkit.event.player.PlayerInteractEntityEvent
+
+on PlayerInteractEntityEvent:
+	if event.getPlayer()'s gamemode is spectator:
+		set {_pp} to event.getPlayer()
+		set {_p} to "%event.getRightClicked()%" parsed as player
+		if {_p} is a player:
+			{_pp} command "/invsee %{_p}%"
+			stop
+
+on inventory click:
+	if {invclick::%player%} is set:
+		cancel event
+
+on inventory close:
+	delete {invclick::%player%}
+
+command /echest [<player>]:
+	trigger:
+		if arg-1 is not set:
+			open player's ender chest to player
+		else if arg-1 is set:
+			if player does not have permission "skript.op":
+				send "&cYou can't look in other player's ender chests"
+			else:
+				open arg-1's ender chest to player
+				send "{@P} {@A} You have opened &6%arg-1%&7's ender chest"
+
+on leftclick:
+	if player's gamemode is spectator:
+		loop all players:
+			if loop-player's gamemode is not spectator:
+				add loop-player to {_tp::*}
+		set {_player} to (a random element out of {_tp::*})
+		if {_player} is not set:
+			send "{@P} {@A} &oThere are no players to teleport to."
+		else if {_player} is set:
+			send "{@P} {@A} Teleported to &f%TribeColor({_player})%%{_player}%"
+			teleport player to {_player}

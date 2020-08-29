@@ -1,0 +1,155 @@
+options:
+	P: &eS&6urvivor
+	A: &8»&7
+	Line: &8&m-------------------------------------------
+
+command /tribe [<text>] [<string>] [<int>] [<string>]:
+	permission: skript.op
+	trigger:
+		if arg-1 is not set:
+			send "{@Line}"
+			send "{@P} {@A} Tribe Help:"
+			send " {@A} &6/tribe add <player> <tribe> &8- &7Add a player to a tribe."
+			send " {@A} &6/tribe remove <player> &8- &7Remove a player from a tribe."
+			send " {@A} &6/tribe color <color> <tribe> &8- &7Change a tribe color."
+			send " {@A} &6/tribe reset &8- &7Clear all tribes."
+			send " {@A} &6/tribe set <tribe> &8- &7Set a tribe camp."
+			send " {@A} &6/tribe teleport <tribe/*> &8- &7Teleport players back to camp."
+			send " {@A} &6/tribe list &8- &7View a list of all tribes."
+			send "{@Line}"
+		else if arg-1 is "list":
+			send "{@P} {@A} Tribe List"
+			loop 6 times:
+				if {Tribe.%loop-number%::*} is set:
+					send " %{TribeColor::%loop-number%::Reference}%Tribe %loop-number% {@A} &f%{Tribe.%loop-number%::*}%"
+				else:
+					send " %{TribeColor::%loop-number%::Reference}%Tribe %loop-number% {@A} &cEmpty"
+		else if arg-1 is "set":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/tribe set <tribe number>"
+			else if arg-2 parsed as number is greater than 0:
+				set {TribeSpawn::%arg-2 parsed as number%} to location of player
+				send "{@P} {@A} &6Tribe %arg-2 parsed as number%'s &7spawn location has been set to &6%location of player%"
+			else:
+				send "&cNot a number dad"
+		else if arg-1 is "teleport" or "tp":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/tribe tp <tribe number/*>"
+			else if arg-2 is "*":
+				loop all players:
+					if {Tribes.InTribe::%loop-player%} is set:
+						teleport loop-player to {TribeSpawn::%{Tribes.InTribe::%loop-player%}%}
+				broadcast "{@P} {@A} All players have been teleported back to camp!"
+			else if arg-2 is not "*":
+				if (size of {Tribe.%arg-2%::*}) is greater than 0:
+					loop all players:
+						if "%{Tribes.InTribe::%loop-player%}%" is "%arg-2%":
+							teleport loop-player to {TribeSpawn::%{Tribes.InTribe::%loop-player%}%}
+							send "{@P} {@A} You have been teleported back to camp!" to loop-player
+					send "{@P} {@A} You have teleported &fTribe %arg-2% &7back to camp!" to sender
+				else:
+					if {Tribes.InTribe::%arg-2%} is not set:
+						send "&cNot on a tribe"
+					else:
+						teleport arg-2 parsed as player to {TribeSpawn::%{Tribes.InTribe::%arg-2%}%}
+						broadcast "{@P} {@A} &6%TribeColor(arg-2 parsed as offlineplayer)%%arg-2 parsed as player% &7has been teleported back to camp!"
+		else if arg-1 is "color":
+			if arg-2 is not "aqua", "black", "blue", "dark_aqua", "dark_blue", "dark_gray", "dark_green", "dark_purple", "dark_red", "gold", "gray", "green", "light_purple", "red" or "yellow":
+				send "&cPlease specify a valid color."
+			else if arg-2 is "aqua", "black", "blue", "dark_aqua", "dark_blue", "dark_gray", "dark_green", "dark_purple", "dark_red", "gold", "gray", "green", "light_purple", "red" or "yellow":
+				if arg-3 is not set:
+					send "{@P} {@A} Usage: &c/tribe color <color> <tribe>"
+				else if arg-3 is set:
+					set {_color} to "%arg-2.toLowerCase()%"
+					set {_c} to {_color}
+					replace all "_" with " " in {_c}
+					console command "/team modify Tribe%arg-3% color %{_color}%"
+					if "%{_c}%" is "aqua":
+						set {_c} to "light aqua"
+					else if "%{_c}%" is "blue":
+						set {_c} to "light blue"
+					else if "%{_c}%" is "green":
+						set {_c} to "light green"
+					else if "%{_c}%" is "red":
+						set {_c} to "light red"
+					if "%{_c}%" is "light blue":
+						set {TribeColor::%arg-3%::Reference} to "&f&9"
+					else:
+						set {TribeColor::%arg-3%::Reference} to "&f<%{_c}%>"
+					set {TribeColor::%arg-3%::ColorReference} to "%{_c}%"
+					wait 1 tick
+					send "{@P} {@A} &6Tribe %arg-3%'s &7color has been set to %{TribeColor::%arg-3%::Reference}%%{_c}%"
+		else if arg-1 is "add":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/tribe add <player/*> <tribe>"
+			else if arg-3 is not set:
+				send "{@P} {@A} Usage: &c/tribe add <player/*> <tribe>"
+			else if arg-2 is not "*":
+				if {Tribes.InTribe::%arg-2%} is arg-3:
+					send "&cError! &7%arg-2 parsed as player% is already in that tribe"
+					stop
+				loop 10 times:
+					delete {Tribe.%loop-number%::%arg-2%}
+				delete {Jury::%arg-2%}
+				remove "%arg-2%" from {JuryList::*}
+				set {Tribes.InTribe::%arg-2%} to arg-3
+				set {Tribe.%arg-3%::%arg-2%} to arg-2 parsed as offlineplayer
+				if sender is not arg-2 parsed as player:
+					send "{@P} {@A} You have added %TribeColor(arg-2 parsed as offlineplayer)%%arg-2 parsed as offlineplayer% &7to %TribeColor(arg-2 parsed as offlineplayer)%Tribe %arg-3%" to sender
+				send "{@P} {@A} You have been added to&8: %TribeColor(arg-2 parsed as offlineplayer)%Tribe %arg-3%" to arg-2 parsed as offlineplayer
+				command "/team join Tribe%arg-3% %arg-2 parsed as offlineplayer%"
+				send "&7&o[%sender%&7&o: Added %arg-2 parsed as offlineplayer%&7&o to Tribe %arg-3%&7&o]" to all ops
+			else if arg-2 is "*":
+				loop all players:
+					if loop-player does not have permission "skript.op":
+						loop 10 times:
+							delete {Tribe.%loop-number%::%loop-player%}
+						set {Tribes.InTribe::%loop-player%} to arg-3
+						set {Tribe.%arg-3%::%loop-player%} to loop-player
+						send "{@P} {@A} You have been added to&8: %TribeColor(loop-player)%Tribe %arg-3%" to loop-player
+						command "/team join Tribe%arg-3% %loop-player%"
+				broadcast "{@P} {@A} All players added to &6Tribe %arg-3%"
+		else if arg-1 is "remove":
+			if arg-2 is not set:
+				send "{@P} {@A} Usage: &c/tribe remove <player>"
+			else if arg-2 is set:
+				if {Tribes.InTribe::%arg-2%} is not set:
+					send "&cError! &7%arg-2 parsed as player% is not in a tribe"
+					stop
+				loop 10 times:
+					delete {Tribe.%loop-number%::%arg-2%}
+				delete {Tribe.%{Tribes.InTribe::%arg-2%}%::%arg-2%}
+				delete {Tribes.InTribe::%arg-2%}
+				send "{@P} {@A} You have been &cremoved &7from your Tribe" to arg-2 parsed as offlineplayer
+				if sender is not arg-2 parsed as offlineplayer:
+					send "{@P} {@A} You have &cremoved &6%arg-2 parsed as offlineplayer% &7from their Tribe" to sender
+				command "/team leave %arg-2 parsed as offlineplayer%"
+				send "&7&o[%sender%&7&o: Removed %arg-2 parsed as offlineplayer% from their Tribe]" to all ops
+		else if arg-1 is "reset":
+			delete {Tribes.InTribe::*}
+			if {TribeColor::1::Reference} is not set:
+				set {TribeColor::1::Reference} to "&f&9"
+				set {TribeColor::1::ColorReference} to "light blue"
+			if {TribeColor::2::Reference} is not set:
+				set {TribeColor::2::Reference} to "&f<light red>"
+				set {TribeColor::2::ColorReference} to "light red"
+			if {TribeColor::3::Reference} is not set:
+				set {TribeColor::3::Reference} to "&f<dark purple>"
+				set {TribeColor::3::ColorReference} to "dark purple"
+			loop 10 times:
+				delete {Tribe.%loop-number%::*}
+				console command "/team empty Tribe%loop-number%"
+				console command "/team remove Tribe%loop-number%"
+				console command "/team add Tribe%loop-number%"
+				set {_color} to {TribeColor::%loop-number%::ColorReference}
+				if "%{_color}%" is "light aqua":
+					set {_color} to "aqua"
+				else if "%{_color}%" is "light blue":
+					set {_color} to "blue"
+				else if "%{_color}%" is "light green":
+					set {_color} to "green"
+				else if "%{_color}%" is "light red":
+					set {_color} to "red"
+				replace all " " with "_" in {_color}
+				console command "/team modify Tribe%loop-number% color %{_color}%"
+			broadcast "{@P} {@A} All tribes have been &creset!"

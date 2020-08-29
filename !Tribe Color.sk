@@ -1,0 +1,5 @@
+function TribeColor(p: player) :: text:
+	if {TribeColor::%{Tribes.InTribe::%{_p}%}%::Reference} is set:
+		return "%{TribeColor::%{Tribes.InTribe::%{_p}%}%::Reference}%"
+	else:
+		return "&f"

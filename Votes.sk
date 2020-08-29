@@ -1,0 +1,71 @@
+options:
+	P: &eS&6urvivor
+	A: &8»&7
+	Line: &8&m-------------------------------------------
+
+command /vote [<text>] [<integer>]:
+	trigger:
+		if arg-1 is not set:
+			send "{@Line}"
+			send "{@P} Vote Help:"
+			send " {@A} &6/vote <player> &8- &7Cast your vote."
+			if player has permission "skript.op":
+				send " {@A} &6/vote start <tribe number> &8- &7Start the votes."
+				send " {@A} &6/vote list <number> &8- &7View voting history."
+				send " {@A} &6/vote clearlist &8- &7Clear voting history."
+			send "{@Line}"
+		else if arg-1 is "clearlist":
+			if player has permission "skript.op":
+				delete {votelist::*}
+				set {votelist} to 0
+				send "{@P} Vote List has been &4reset&7."
+		else if arg-1 is "list":
+			if player has permission "skript.op":
+				if arg-2 is not set:
+					send "{@P} Usage: &c/vote list <number>"
+				else if arg-2 is set:
+					if {votelist::%arg-2%::*} is not set:
+						send "&cError! &7No voting history saved for '%arg-2%'"
+					else if {votelist::%arg-2%::*} is set:
+						send "{@Line}"
+						send "{@P} Vote List: &6%arg-2%"
+						loop {votelist::%arg-2%::*}:
+							send " {@A} &6%loop-index parsed as offlineplayer% &7voted for&8: &e%loop-value%"
+						send "{@Line}"
+		else if arg-1 is not "start", "list" or "clearlist":
+			if {waitingforvote::%player%} is not set:
+				send "&cYou're not voting now."
+			else if {waitingforvote::%player%} is set:
+				delete {waitingforvote::%player%}
+				send "{@P} You have cast your vote for &6%arg-1%" to player
+				send "&7&o(%player%&7&o: Cast their vote for %arg-1%)" to all ops
+				give 1 of paper named "%uncolored arg-1%" to {voteshost}
+				set {votelist::%{votelist}%::%player%} to uncolored arg-1
+		else if arg-1 is "start":
+			if player has permission "skript.op":
+				if arg-2 is not set:
+					send "{@P} Usage: &c/vote start <tribe number>"
+				else if arg-2 is set:
+					if arg-2 is less than 1:
+						send "&cError! &7This is not a tribe"
+						stop
+					add 1 to {votelist}
+					delete {waitingforvote::*}
+					loop all players:
+						if {Tribes.InTribe::%loop-player%} is set:
+							if {Tribes.InTribe::%loop-player%} is arg-2:
+								set {waitingforvote::%loop-player%} to loop-player
+								send "{@P} The voting has &6started&7." to loop-player
+								send "{@P} You can now place your vote with &6/vote <player>" to loop-player
+					if size of {waitingforvote::*} is 0:
+						send "&cError! &7There are no castaways to vote."
+						stop
+					set {voteshost} to player
+					send "{@P} You have started votes. &8[&7Votelist: &6%{votelist}%&8]" 
+
+on rightclick holding paper:
+	if player has permission "skript.op":
+		if name of player's tool is set:
+			loop players in radius 40 of player:
+				set {_vote} to name of player's tool
+				send loop-player title "&7Vote for.." with subtitle "&6%uncolored {_vote}%" for 2 seconds

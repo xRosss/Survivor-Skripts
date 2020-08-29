@@ -1,0 +1,76 @@
+import:
+    java.util.Arrays
+    org.bukkit.event.server.TabCompleteEvent
+
+effect set completions to %strings% at %string%:
+    trigger:
+        if expression-2 is "":
+            event.setCompletions(Arrays.asList(expressions-1))
+        else:
+            set {_completions::*} to expressions-1
+            loop expression-2.length() times:
+                loop {_completions::*}:
+                    if {_completions::%loop-index%}.substring(loop-number - 1, loop-number) isn't expression-2.substring(loop-number - 1, loop-number):
+                        clear {_completions::%loop-index%} 
+            event.setCompletions(Arrays.asList({_completions::*}))
+
+expression tabbed command:
+    get:
+        set {_text} to first element out of split event.getBuffer() at " "
+        return "/%{_text}%" if event.getSender() is CONSOLE else {_text}
+
+expression tab arg[ument]( |-)%*number%:
+    get:
+        set {_l::*} to split event.getBuffer() at " "
+        clear {_l::1}
+        set {_l::*} to {_l::*}
+        return {_l::%expr 1%}
+    
+expression buffer:
+    get:
+        return event.getBuffer()
+
+on TabCompleteEvent:
+    if tabbed command is "/gamemode" or "/gm":
+        if tab arg-2 isn't set:
+            set completions to "creative", "survival", "adventure" and "spectator" at tab arg-1
+        else:
+            if tab arg-3 isn't set:
+                loop all players:
+                    add "%loop-player%" to {_players::*}
+                set completions to {_players::*} at tab arg-2
+    if tabbed command is "/tribe":
+        if tab arg-2 isn't set:
+            set completions to "add", "remove", "color", "tp" and "reset" at tab arg-1
+        else:
+            if tab arg-3 isn't set:
+                if tab arg-1 is "color":
+                    set completions to {TRIBECOLORS::*} at tab arg-2
+                if tab arg-1 is "add":
+                    loop all players:
+                        add "%loop-player%" to {_players::*}
+                    set completions to {_players::*} at tab arg-2
+                if tab arg-1 is "remove":
+                    loop all players:
+                        add "%loop-player%" to {_players::*}
+                    set completions to {_players::*} at tab arg-2
+    if tabbed command is "/warp":
+        if tab arg-2 isn't set:
+            if (size of {warp::*}) is greater than 0:
+                loop {warp::*}:
+                    add "%loop-index%" to {_warps::*}
+            set completions to {_warps::*}, "set" and "delete" at tab arg-1
+        else:
+            if tab arg-3 isn't set:
+                if tab arg-1 isn't "set" or "delete":
+                    loop all players:
+                        add "%loop-player%" to {_players::*}
+                    set completions to {_players::*}, "*" and "tribe" at tab arg-2
+                else if tab arg-1 is "delete":
+                    loop {warp::*}:
+                        add "%loop-index%" to {_warps::*}
+                    set completions to {_warps::*} at tab arg-2
+            else:
+                if tab arg-4 isn't set:
+                    if tab arg-2 is "tribe":
+                        set completions to "1", "2" and "3" at tab arg-3

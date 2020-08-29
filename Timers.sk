@@ -1,0 +1,67 @@
+options:
+    P: &eS&6urvivor
+    A: &8»&7
+
+expression:
+    return type: text
+    patterns:
+        time format from %timespan%
+    get:
+        set {_time} to (expr-1.getTicks()/20)
+        set {_d} to rounded down ((({_time}/60)/60)/24)
+        remove {_d}*60*60*24 from {_time}
+        set {_h} to rounded down ((({_time}/60)/60))
+        remove {_h}*60*60 from {_time}
+        set {_m} to rounded down ((({_time}/60)))
+        remove {_m}*60 from {_time}
+        set {_s} to rounded down ((({_time})))
+        loop "d", "h", "m" and "s":
+            {_%loop-value%} is not 0:
+                add "%{_%loop-value%}%&7%loop-value%&6" to {_t::*}
+        return join {_t::*} by ""
+
+on script load:
+    set {Timer::Running} to false
+    console command "/timer cancel"
+
+command /timer [<text>] [<text>]:
+    permission: skript.op
+    trigger:
+        if arg-1 is not set:
+            send "{@P} {@A} Usage: &c/timer <cancel/seconds> <message>"
+        else if arg-1 parsed as int is set:
+            if arg-2 is not set:
+                send "{@P} {@A} Usage: &c/timer <seconds> <message>"
+            else if arg-2 is set:
+                if {Timer::Running} is true:
+                    send "&cThere is a timer currently running"
+                    stop
+                set {Timer::Time} to "%arg-1% Seconds" parsed as timespan
+                set {Timer::Repeat} to false
+                set {Timer::Message} to arg-2
+                set {Timer::Running} to true
+                broadcast "{@P} {@A} A timer has started"
+        else if arg-1 is "cancel":
+            if {Timer::Running} is false:
+                send "&cThere is no timer currently running"
+            else if {Timer::Running} is true:
+                set {Timer::Running} to false
+                set {Timer::Repeat} to false
+                delete {Timer::Message}
+                delete {Timer::Time}
+                broadcast "{@P} {@A} Timer has been cancelled."
+
+every real second:
+    if {Timer::Running} is true:
+        if {Timer::Time} is set:
+            remove 1 second from {Timer::Time}
+            if {Timer::Time} is 0 seconds:
+                delete {Timer::Time}
+                delete {Timer::Message}
+                set {Timer::Repeat} to false
+                set {Timer::Running} to false
+                broadcast "{@P} {@A} Timer has finished."
+
+every 15 ticks:
+    if {Timer::Running} is true:
+        send action bar "&6%{Timer::Message}% {@A} &6%time format from {Timer::Time}%" to all players

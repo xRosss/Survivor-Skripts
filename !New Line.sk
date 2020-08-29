@@ -1,0 +1,7 @@
+import:
+  java.lang.System
+
+expression (nl|new line|newline):
+  return type: text
+  get:
+    return last character of System.lineSeparator()
